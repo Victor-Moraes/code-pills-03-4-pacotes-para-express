@@ -4,8 +4,21 @@ import knex from '../db/conn';
 import Todo from '../@types/Todo';
 
 class TodoController {
-  async index(request: Request, response: Response) {
-    const todos: Todo[] = await knex('todos').select('*');
+  async index(request: Request<
+    {},
+    {},
+    {},
+    { completed?: string, due_date?: { gte?: string, lte?:string } }>,
+    response: Response
+  ) {
+    const { completed, due_date } = request.query;
+
+    const query = knex('todos').select('*');
+    if(typeof completed !== 'undefined') query.where('completed', '=', completed === 'true' ? 1 : 0);
+    if(typeof due_date?.gte !== 'undefined') query.where('due_date','>=', due_date.gte);
+    if(typeof due_date?.lte !== 'undefined') query.where('due_date','<=', due_date.lte);
+
+    const todos: Todo[] = await query;
 
     const serializedTodos = todos.map(todo => ({
       ...todo,
@@ -16,7 +29,7 @@ class TodoController {
   }
 
   async store(
-    request: Request<{}, { text: string, due_date: string | null }>,
+    request: Request<{}, {}, { text: string, due_date?: string }>,
     response: Response
   ) {
     const { text, due_date } = request.body;
@@ -29,7 +42,7 @@ class TodoController {
   }
 
   async update(
-    request: Request<{ id: string }, { text: string, due_date: string, completed: boolean }>,
+    request: Request<{ id: string }, {}, { text: string, due_date: string, completed: boolean }>,
     response: Response
   ) {
     const id = Number(request.params.id);
