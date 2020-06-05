@@ -11,11 +11,13 @@
   },
   "dependencies": {
     "express": "^4.17.1",
+    "helmet": "^3.22.0",
     "knex": "^0.21.1",
     "sqlite3": "^4.2.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.6",
+    "@types/helmet": "^0.0.47",
     "ts-node": "^8.10.2",
     "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.9.5"
