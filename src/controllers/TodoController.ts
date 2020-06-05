@@ -1,9 +1,11 @@
 import {Request, Response} from 'express';
 import knex from '../db/conn';
 
+import Todo from '../@types/Todo';
+
 class TodoController {
   async index(request: Request, response: Response) {
-    const todos = await knex('todos').select('*');
+    const todos: Todo[] = await knex('todos').select('*');
 
     const serializedTodos = todos.map(todo => ({
       ...todo,
@@ -13,30 +15,36 @@ class TodoController {
     return response.json(serializedTodos);
   }
 
-  async store(request: Request, response: Response) {
-    const { text, due_date = null } = request.body;
+  async store(
+    request: Request<{}, { text: string, due_date: string | null }>,
+    response: Response
+  ) {
+    const { text, due_date } = request.body;
 
-    const todo = { text, due_date, completed: false };
+    const todo: Todo = { text, due_date, completed: false };
     
     const insertedTodoIds = await knex('todos').insert(todo);
 
     return response.json({ id: insertedTodoIds[0], ...todo });
   }
 
-  async update(request: Request, response: Response) {
-    const { id } = request.params;
+  async update(
+    request: Request<{ id: string }, { text: string, due_date: string, completed: boolean }>,
+    response: Response
+  ) {
+    const id = Number(request.params.id);
 
-    const todo = await knex('todos').where('id', id).first();
+    const todo: Todo | null = await knex('todos').where('id', id).first();
 
     if(!todo) return response.status(404).json({ msg: 'Todo not found.' });
 
     const { text, due_date, completed } = request.body;
 
-    const newTodoInformation = { text, due_date, completed };
+    const newTodoInformation: Todo = { text, due_date, completed };
 
-    await knex('todos').update(newTodoInformation).where('id', todo.id);
+    await knex('todos').update(newTodoInformation).where('id', id);
 
-    return response.json({...newTodoInformation, id: todo.id});
+    return response.json({...newTodoInformation, id: id});
   }
 };
 
